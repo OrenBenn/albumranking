@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RankTune</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --accent: #1db954;
+  --accent2: #1ed760;
+  --text: #f0ede8;
+  --muted: #8888a0;
+  --border: rgba(255,255,255,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html, body { max-width: 100vw; overflow-x: hidden; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+.container { max-width:900px; margin:0 auto; padding:0 20px; width: 100%; }
+
+header { text-align:center; padding:52px 0 36px; }
+.logo { font-family:'Playfair Display',serif; font-size:clamp(34px,6vw,56px); font-weight:700; letter-spacing:-1px; }
+.logo span { color:var(--accent); font-style:italic; }
+.tagline { font-size:13px; color:var(--muted); margin-top:6px; letter-spacing:2px; text-transform:uppercase; }
+
+.search-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.search-bar { display:flex; gap:10px; width:100%; margin-bottom: 28px; }
+.artist-search-bar { max-width: 280px; margin-left: auto; margin-right: auto; }
+.search-bar input {
+  flex:1; min-width:140px; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:13px 18px; font-family:'DM Sans',sans-serif;
+  font-size:16px; color:var(--text); outline:none; transition:border-color .2s;
+}
+.search-bar input:focus { border-color:var(--accent); }
+input::placeholder { color:var(--muted); }
+
+.btn {
+  background:var(--accent); color:#000; border:none; padding:13px 24px;
+  border-radius:12px; font-family:'DM Sans',sans-serif; font-size:15px;
+  font-weight:500; cursor:pointer; transition:background .2s, transform .1s; white-space:nowrap;
+}
+.btn:hover { background:var(--accent2); }
+.btn:active { transform: scale(0.98); }
+#link-btn { border-radius: 50px; }
+
+.btn-ghost {
+  background:transparent; color:var(--text); border:1px solid var(--border);
+  padding:11px 20px; border-radius:12px; font-family:'DM Sans',sans-serif;
+  font-size:14px; cursor:pointer; transition:all .2s;
+}
+.btn-ghost:hover { border-color:var(--muted); background: rgba(255, 255, 255, 0.02); }
+
+.section-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+.artists-list { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.artist-card {
+  display:flex; align-items:center; gap:14px; padding:12px 16px;
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  cursor:pointer; transition:all .2s;
+}
+.artist-card:hover { border-color:var(--accent); background:rgba(29,185,84,0.05); }
+.artist-avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.artist-info-name { font-size:15px; font-weight:500; }
+.artist-info-followers { font-size:12px; color:var(--muted); margin-top:2px; }
+
+.group-separator { display:flex; align-items:center; gap:12px; margin:24px 0 16px; }
+.group-separator-line { flex:1; height:1px; background:var(--border); }
+.group-separator-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+
+.albums-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; margin-bottom:40px; }
+.album-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:12px; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; gap:8px; height: 100%;
+}
+.album-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.album-card.special-card { background: linear-gradient(145deg, var(--surface), rgba(29, 185, 84, 0.1)); border-color: rgba(29, 185, 84, 0.3); }
+.album-card.special-card:hover { border-color: var(--accent); background: linear-gradient(145deg, var(--surface), rgba(29, 185, 84, 0.2)); }
+.album-card .img-wrap { width:100%; aspect-ratio:1; border-radius:8px; overflow:hidden; background:var(--surface2); flex-shrink:0; position:relative; }
+.album-card .img-wrap img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+
+.album-name { font-size:13px; font-weight:500; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break: break-word; }
+.album-meta { font-size:11px; color:var(--muted); }
+
+#ranking-section { display:none; padding-bottom:60px; }
+.ranking-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.back-btn { display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; padding:0; transition:color .2s; }
+.back-btn:hover { color:var(--text); }
+
+.album-header { display:flex; align-items:center; gap:16px; margin-bottom:28px; padding:18px; background:var(--surface); border:1px solid var(--border); border-radius:14px; }
+.album-header img { width:68px; height:68px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+.album-header-info { flex: 1; min-width: 0; }
+.album-header h3 { font-family:'Playfair Display',serif; font-size: clamp(15px, 4.5vw, 22px); font-weight:700; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break: break-word; }
+.album-header p { font-size:13px; color:var(--muted); margin-top:4px; }
+
+.progress-wrap { margin-bottom:28px; }
+.progress-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:8px; }
+.progress-bar { height:3px; background:var(--surface2); border-radius:999px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--accent); border-radius:999px; transition:width .4s; }
+
+.duel-label { text-align:center; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:18px; }
+.duel-arena { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:stretch; margin-bottom:24px; max-width:600px; margin-left:auto; margin-right:auto; }
+.vs-badge { font-family:'Playfair Display',serif; font-size:22px; font-style:italic; color:var(--muted); text-align:center; opacity:.5; display:flex; align-items:center; }
+
+.duel-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; cursor:pointer; transition:all .25s; overflow:hidden; display:flex; flex-direction:column; user-select: none; -webkit-user-select: none; }
+.duel-card:hover { border-color:var(--accent); transform:scale(1.02); }
+.duel-card:active { transform:scale(0.98); }
+.duel-cover { width:100%; aspect-ratio:1; object-fit:cover; display:block; pointer-events: none; }
+.duel-info { padding:14px 16px 16px; display:flex; flex-direction:column; gap:4px; flex-grow: 1; justify-content: space-between; }
+.duel-track-meta { display:flex; flex-direction:column; gap:4px; }
+.duel-track-num { font-size:11px; color:var(--muted); letter-spacing:1px; }
+.duel-track-name { font-family:'Playfair Display',serif; font-size:clamp(14px,2.5vw,20px); font-weight:700; line-height:1.2; word-break:break-word; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.duel-track-dur { font-size:12px; color:var(--muted); margin-top:2px; }
+
+.preview-btn { display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--border); border-radius:20px; padding:6px 14px; margin-top:12px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); cursor:pointer; transition:all .2s; width:fit-content; }
+.preview-btn:hover:not(.unavailable) { border-color:var(--accent); color:var(--accent); }
+.preview-btn.playing { border-color:var(--accent); color:var(--accent); background:rgba(29,185,84,0.1); }
+.preview-btn.unavailable { opacity:0.3; cursor:not-allowed; }
+
+.controls-row { display:flex; justify-content:center; gap:12px; margin-bottom:40px; flex-wrap:wrap; }
+.keyboard-hints { text-align: center; font-size: 11px; color: var(--muted); margin-top: -12px; margin-bottom: 36px; display: flex; justify-content: center; gap: 16px; opacity: 0.6; flex-wrap: wrap; }
+.kbd-key { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-size: 10px; color: var(--text); }
+
+.results-header { text-align:center; margin-bottom:28px; position: relative; }
+.results-header h2 { font-family:'Playfair Display',serif; font-size:30px; font-weight:700; }
+.results-sub-container { display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-top: 6px; position: relative; width: 100%; }
+.results-header p { font-size:13px; color:var(--muted); margin: 0; }
+
+.stats-hyperlink { font-size: 13px; color: var(--accent); text-decoration: underline; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: color 0.2s; display: none; position: absolute; right: 0; bottom: 0; }
+.stats-hyperlink:hover { color: var(--accent2); }
+
+.ranking-list { display:flex; flex-direction:column; gap:8px; margin-bottom:32px; }
+.rank-item { display:flex; align-items:center; gap:16px; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:12px; animation:slideUp .3s ease both; }
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.rank-num { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--muted); min-width:32px; text-align:right; flex-shrink:0; }
+.rank-num.gold { color:#f5c518; }
+.rank-num.silver { color:#c0c0c0; }
+.rank-num.bronze { color:#cd7f32; }
+.rank-name { flex:1; font-size:15px; font-weight:500; }
+.rank-dur { font-size:12px; color:var(--muted); }
+.share-row { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom: 24px; }
+
+.resume-banner { background: rgba(29, 185, 84, 0.1); border: 1px solid rgba(29, 185, 84, 0.2); border-radius: 12px; padding: 16px; margin-bottom: 24px; display: none; align-items: center; justify-content: space-between; gap: 16px; animation: slideUp 0.3s ease; flex-wrap: wrap; }
+.resume-banner-text { font-size: 14px; }
+.resume-banner-btns { display: flex; gap: 8px; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 1000; padding: 20px; }
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 550px; max-height: 80vh; overflow-y: auto; padding: 28px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.5); animation: modalScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+@keyframes modalScale { from { transform: scale(0.95); } to { transform: scale(1); } }
+.modal-close { position: absolute; top: 22px; right: 22px; background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+
+.loader { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+.spinner { display:inline-block; width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin-right:8px; vertical-align:middle; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.error-msg { background:rgba(255,60,60,.08); border:1px solid rgba(255,60,60,.2); color:#ff6b6b; border-radius:10px; padding:12px 16px; font-size:13px; margin-top:12px; }
+
+@media(max-width:540px){
+  .albums-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duel-arena { grid-template-columns:1fr 24px 1fr; gap:8px; }
+  .keyboard-hints { display: none; }
+  .container { padding: 0 14px; }
+  .search-container { max-width: 100%; }
+}
+
+.lang-selector { position:fixed; top:16px; right:16px; z-index:100; display:flex; align-items:center; gap:6px; }
+.lang-btn { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:6px 12px; font-size:13px; cursor:pointer; color:var(--text); font-family:'DM Sans',sans-serif; transition:all .2s; display:flex; align-items:center; gap:6px; }
+.lang-btn:hover { border-color:var(--accent); }
+.lang-dropdown { position:absolute; top:calc(100% + 8px); right:0; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:none; min-width:140px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.lang-dropdown.open { display:block; }
+.lang-option { padding:10px 16px; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:10px; transition:background .15s; }
+.lang-option:hover { background:var(--surface2); }
+.lang-option.active { color:var(--accent); }
+
+body.rtl { direction:rtl; }
+body.rtl .back-btn { flex-direction:row-reverse; }
+body.rtl .album-header { flex-direction:row-reverse; }
+body.rtl .lang-selector { right:auto; left:16px; }
+body.rtl .lang-dropdown { right:auto; left:0; }
+body.rtl .keyboard-hints { flex-direction: row-reverse; }
+body.rtl .modal-close { right: auto; left: 22px; }
+body.rtl .stats-hyperlink { right: auto; left: 0; }
+body.rtl .results-sub-container { flex-direction: row-reverse; }
+
+#dev-logs-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 999; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 50px; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+#dev-logs-toggle:hover { border-color: var(--accent); color: var(--text); transform: translateY(-2px); }
+#dev-logs-panel { position: fixed; top: 0; right: -380px; width: 360px; height: 100vh; background: #07070a; border-left: 1px solid var(--border); z-index: 1001; box-shadow: -10px 0 40px rgba(0,0,0,0.8); transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; font-family: 'Courier New', Courier, monospace; font-size: 11px; }
+#dev-logs-panel.open { right: 0; }
+#dev-logs-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; color: #a1a1aa; line-height: 1.5; scroll-behavior: smooth; }
+.log-info { color: #94a3b8; }
+.log-success { color: #34d399; }
+.log-warn { color: #fbbf24; font-weight: bold; }
+.log-error { color: #f87171; }
+.log-highlight { color: #38bdf8; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="lang-selector">
+  <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown()">
+    <span id="lang-flag">🇫🇷</span>
+    <span id="lang-label">FR</span>
+    <span style="font-size:10px;opacity:0.6;">▼</span>
+  </div>
+  <div class="lang-dropdown" id="lang-dropdown">
+    <div class="lang-option" onclick="setLang('fr')">🇫🇷 Français</div>
+    <div class="lang-option" onclick="setLang('en')">🇬🇧 English</div>
+    <div class="lang-option" onclick="setLang('he')">🇮🇱 עברית</div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="logo">Rank<span>Tune</span></div>
+    <div class="tagline" data-i18n="tagline">Classez chaque chanson de vos albums préférés</div>
+  </header>
+
+  <div class="resume-banner" id="resume-banner">
+    <div class="resume-banner-text" id="resume-banner-text" data-i18n="resume_text">Une session de classement en cours a été trouvée. Souhaitez-vous la reprendre ?</div>
+    <div class="resume-banner-btns">
+      <button class="btn" style="padding: 8px 16px; font-size: 13px;" id="resume-yes-btn" data-i18n="resume_yes">Oui</button>
+      <button class="btn-ghost" style="padding: 7px 14px; font-size: 13px;" id="resume-no-btn" data-i18n="resume_no">Non</button>
+    </div>
+  </div>
+
+  <div id="search-section">
+    <div class="search-container">
+      <div class="search-bar artist-search-bar" style="margin-bottom: 0;">
+        <input type="text" id="artist-input" data-i18n-placeholder="artist_placeholder" placeholder="Artiste" autocomplete="off" />
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;" data-i18n="or_paste">
+        Ou collez directement un lien Spotify :
+      </div>
+      <div class="search-bar" style="margin-bottom:24px;">
+        <input type="text" id="link-input" data-i18n-placeholder="link_placeholder" placeholder="Lien artiste, album ou playlist Spotify" />
+        <button class="btn" id="link-btn" data-i18n="import">Importer</button>
+      </div>
+    </div>
+    <div id="search-status"></div>
+    <div id="albums-results"></div>
+  </div>
+
+  <div id="ranking-section">
+    <div class="ranking-header-bar">
+      <button class="back-btn" id="back-btn" data-i18n="new_search">← Nouvelle recherche</button>
+    </div>
+
+    <div id="duel-phase">
+      <div class="album-header">
+        <img id="sel-img" src="" alt="">
+        <div class="album-header-info">
+          <h3 id="sel-name"></h3>
+          <p id="sel-meta"></p>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span data-i18n="progress">Progression</span><span id="prog-txt">0 / 0</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="duel-label" data-i18n="duel_label">Laquelle préférez-vous ?</div>
+      <div class="duel-arena">
+        <div class="duel-card" id="card-a">
+          <img class="duel-cover" id="cover-a" src="" alt="">
+          <div class="duel-info">
+            <div class="duel-track-meta">
+              <div class="duel-track-num" id="num-a"></div>
+              <div class="duel-track-name" id="name-a"></div>
+              <div class="duel-track-dur" id="dur-a"></div>
+            </div>
+            <button class="preview-btn" id="preview-a" onclick="togglePreview('a', event)" data-i18n="listen">▶ Écouter</button>
+          </div>
+        </div>
+        <div class="vs-badge">vs</div>
+        <div class="duel-card" id="card-b">
+          <img class="duel-cover" id="cover-b" src="" alt="">
+          <div class="duel-info">
+            <div class="duel-track-meta">
+              <div class="duel-track-num" id="num-b"></div>
+              <div class="duel-track-name" id="name-b"></div>
+              <div class="duel-track-dur" id="dur-b"></div>
+            </div>
+            <button class="preview-btn" id="preview-b" onclick="togglePreview('b', event)" data-i18n="listen">▶ Écouter</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="keyboard-hints">
+        <span><span class="kbd-key">←</span> <span data-i18n="hint_left">Voter A</span></span>
+        <span><span class="kbd-key">→</span> <span data-i18n="hint_right">Voter B</span></span>
+        <span><span class="kbd-key">↓</span> <span data-i18n="hint_skip">Égalité</span></span>
+        <span><span class="kbd-key">Backspace</span> <span data-i18n="hint_undo">Annuler</span></span>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn-ghost" id="undo-btn" data-i18n="undo">↩ Annuler</button>
+        <button class="btn-ghost" id="skip-btn" data-i18n="skip">Passer (égalité)</button>
+      </div>
+    </div>
+
+    <div id="results-phase" style="display:none;">
+      <div class="results-header">
+        <h2 data-i18n="your_ranking">Votre classement</h2>
+        <div class="results-sub-container">
+          <p id="results-album-name"></p>
+          <span id="stats-link" class="stats-hyperlink" onclick="openStatsModal()" data-i18n="stats">Stats</span>
+        </div>
+      </div>
+      <div class="ranking-list" id="ranking-list"></div>
+      <div class="share-row">
+        <button class="btn" id="restart-btn" data-i18n="restart">Recommencer</button>
+        <button class="btn-ghost" id="new-album-btn" data-i18n="other_album">Autre album</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="dev-logs-toggle" onclick="toggleDevLogs()">
+  <span style="display: inline-block; width: 8px; height: 8px; background: #fbbf24; border-radius: 50%;" id="dev-logs-indicator"></span>
+  <span>Console de Sync</span>
+</button>
+
+<div id="dev-logs-panel">
+  <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #111118;">
+    <span style="font-weight: bold; color: var(--text); letter-spacing: 1px;">CONSOLE DE SYNCHRONISATION</span>
+    <button onclick="toggleDevLogs()" style="background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0 4px;">×</button>
+  </div>
+  <div id="dev-logs-content">
+    <div class="log-info">La console enregistrera les étapes d'alignement audio. Lancez un import pour voir l'algorithme à l'œuvre !</div>
+  </div>
+  <div style="padding: 10px 16px; border-top: 1px solid var(--border); background: #111118; display: flex; justify-content: space-between; align-items: center;">
+    <button onclick="clearDevLogs()" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 10px; text-decoration: underline;">Effacer</button>
+    <span style="color: var(--muted); font-size: 10px; font-weight: 500;">RankTune Engine v4.1</span>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stats-modal" onclick="closeStatsModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeStatsModal(event)">×</button>
+    <h2 id="stats-modal-title" style="font-family:'Playfair Display',serif; font-size:24px; margin-bottom:6px;" data-i18n="stats_title">Analyse de vos goûts</h2>
+    <p id="stats-modal-subtitle" style="font-size:13px; color:var(--muted); margin-bottom:24px;" data-i18n="stats_subtitle">Pourcentages d'appréciation calculés d'après vos duels</p>
+    
+    <div id="stats-summary" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;"></div>
+    <div id="stats-bars-container" style="display:flex; flex-direction:column; gap:14px;"></div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID     = '3f3173e083604096abe93d93e05a8867';
+const CLIENT_SECRET = '76dff06debf5467aa7fe2dc911779134';
+
+const i18n = {
+  fr: {
+    tagline: 'Classez chaque chanson de vos albums préférés',
+    artist_placeholder: 'Artiste',
+    search: 'Chercher',
+    or_paste: 'Ou collez directement un lien Spotify :',
+    link_placeholder: 'Lien artiste, album ou playlist Spotify',
+    import: 'Importer',
+    new_search: '← Nouvelle recherche',
+    progress: 'Progression',
+    duel_label: 'Laquelle préférez-vous ?',
+    listen: '▶ Écouter',
+    no_preview: '🚫 Pas d\'extrait',
+    skip: 'Passer (égalité)',
+    undo: '↩ Annuler',
+    your_ranking: 'Votre classement',
+    restart: 'Recommencer',
+    other_album: 'Autre album',
+    loading: 'Chargement...',
+    searching: 'Recherche...',
+    choose_artist: 'Choisissez l\'artiste',
+    no_artist: 'Aucun artiste trouvé.',
+    no_album: 'Aucun album trouvé.',
+    followers: 'abonnés',
+    tracks: 'titres',
+    track_single: 'titre',
+    albums_label: 'Albums',
+    deluxe_label: 'Deluxe & Remastered',
+    eps_label: 'EPs & Mixtapes',
+    singles_label: 'Singles',
+    back_btn: '←',
+    stop: '⏸ Stop',
+    track_label: 'Piste',
+    hint_left: 'Voter A',
+    hint_right: 'Voter B',
+    hint_skip: 'Égalité',
+    hint_undo: 'Annuler',
+    resume_text: 'Une session en cours a été détectée. Reprendre là où vous en étiez ?',
+    resume_yes: 'Oui',
+    resume_no: 'Non',
+    stats: 'Stats',
+    stats_title: 'Analyse de vos goûts',
+    stats_subtitle: 'Pourcentages d\'appréciation calculés d\'après vos duels',
+    stats_favorite: 'Favori',
+    stats_least: 'Moins aimé',
+    all_tracks_by: 'Toute la discographie de',
+    rank_all: 'Classer TOUS les titres',
+    playlist_mode: 'Pré-cache Global + On-Demand Artist Lookup'
+  },
+  en: {
+    tagline: 'Rank every song from your favorite albums',
+    artist_placeholder: 'Artist',
+    search: 'Search',
+    or_paste: 'Or paste a Spotify link directly:',
+    link_placeholder: 'Spotify artist, album or playlist link',
+    import: 'Import',
+    new_search: '← New search',
+    progress: 'Progress',
+    duel_label: 'Which do you prefer?',
+    listen: '▶ Listen',
+    no_preview: '🚫 No preview',
+    skip: 'Skip (tie)',
+    undo: '↩ Undo',
+    your_ranking: 'Your ranking',
+    restart: 'Restart',
+    other_album: 'Other album',
+    loading: 'Loading...',
+    searching: 'Searching...',
+    choose_artist: 'Choose the artist',
+    no_artist: 'No artist found.',
+    no_album: 'No album found.',
+    followers: 'followers',
+    tracks: 'tracks',
+    track_single: 'track',
+    albums_label: 'Albums',
+    deluxe_label: 'Deluxe & Remastered',
+    eps_label: 'EPs & Mixtapes',
+    singles_label: 'Singles',
+    back_btn: '←',
+    stop: '⏸ Stop',
+    track_label: 'Track',
+    hint_left: 'Vote A',
+    hint_right: 'Vote B',
+    hint_skip: 'Tie',
+    hint_undo: 'Undo',
+    resume_text: 'An active session was detected. Would you like to resume where you left off?',
+    resume_yes: 'Yes',
+    resume_no: 'No',
+    stats: 'Stats',
+    stats_title: 'Taste Analysis',
+    stats_subtitle: 'Appreciation scores calculated from your choices',
+    stats_favorite: 'Top Track',
+    stats_least: 'Least Liked',
+    all_tracks_by: 'Full discography of',
+    rank_all: 'Rank ALL tracks',
+    playlist_mode: 'Global Pre-cache + On-Demand Artist Lookup'
+  },
+  he: {
+    tagline: 'דרגו כל שיר מהאלבומים האהובים עליכם',
+    artist_placeholder: 'אמן',
+    search: 'חיפוש',
+    or_paste: ':או הדביקו קישור ספוטיפיי ישירות',
+    link_placeholder: 'קישור לאמן, אלבום או פלייליסט בספוטיפיי',
+    import: 'ייבוא',
+    new_search: 'חיפוש חדש ←',
+    progress: 'התקדמות',
+    duel_label: 'איזה שיר אתם מעדיפים?',
+    listen: '▶ האזן',
+    no_preview: '🚫 אין תצוגה מקדימה',
+    skip: 'דלג (שוויון)',
+    undo: 'בטל ↩',
+    your_ranking: 'הדירוג שלך',
+    restart: 'התחל מחדש',
+    other_album: 'אלבום אחר',
+    loading: '...טוען',
+    searching: '...מחפש',
+    choose_artist: 'בחרו אמן',
+    no_artist: '.לא נמצא אמן',
+    no_album: '.לא נמצא אלבום',
+    followers: 'עוקבים',
+    tracks: 'שירים',
+    track_single: 'שיר',
+    albums_label: 'אלבומים',
+    deluxe_label: 'מהדורות דלוקס',
+    eps_label: 'EP ומיקסטייפ',
+    singles_label: 'סינגלים',
+    back_btn: '→',
+    stop: '⏸ עצור',
+    track_label: 'שיר',
+    hint_left: 'הצבע א\'',
+    hint_right: 'הצבע ב\'',
+    hint_skip: 'תיקו',
+    hint_undo: 'בטל',
+    resume_text: 'נמצאה הפעלה פעילה. האם ברצונך להמשיך מאיפה שהפסקת?',
+    resume_yes: 'כן',
+    resume_no: 'לא',
+    stats: 'סטטיסטיקות',
+    stats_title: 'ניתוח העדפות',
+    stats_subtitle: 'אחוזי הערכה המבוססים על הבחירות שלך',
+    stats_favorite: 'הכי אהוב',
+    stats_least: 'הכי פחות אהוב',
+    all_tracks_by: 'כל הדיסקוגרפיה של',
+    rank_all: 'דרג את כל השירים',
+    playlist_mode: 'מטמון גלובלי מראש + חיפוש אמן לפי דרישה'
+  }
+};
+
+let currentLang = localStorage.getItem('ranktune_lang') || 'fr';
+
+function t(key) { return i18n[currentLang]?.[key] || i18n['en'][key] || key; }
+
+function clearDevLogs() {
+  const content = document.getElementById('dev-logs-content');
+  if(content) content.innerHTML = '';
+  const indicator = document.getElementById('dev-logs-indicator');
+  if(indicator) indicator.style.backgroundColor = '#fbbf24'; 
+}
+
+function logDev(message, type = 'info') {
+  console.log(`[SyncEngine] ${message}`);
+  const container = document.getElementById('dev-logs-content');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = `log-${type}`;
+  let safeMsg = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  div.innerHTML = safeMsg;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+
+  const indicator = document.getElementById('dev-logs-indicator');
+  if (type === 'error') indicator.style.backgroundColor = '#f87171'; 
+  else if (type === 'success') indicator.style.backgroundColor = '#34d399'; 
+  else if (type === 'warn') indicator.style.backgroundColor = '#f59e0b';
+}
+
+function toggleDevLogs() { document.getElementById('dev-logs-panel').classList.toggle('open'); }
+
+function applyLang() {
+  const isHe = currentLang === 'he';
+  document.body.classList.toggle('rtl', isHe);
+  document.documentElement.lang = currentLang;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key === 'listen' && el.classList.contains('playing')) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+
+  const flags = { fr: '🇫🇷', en: '🇬🇧', he: '🇮🇱' };
+  const labels = { fr: 'FR', en: 'EN', he: 'HE' };
+  document.getElementById('lang-flag').textContent = flags[currentLang];
+  document.getElementById('lang-label').textContent = labels[currentLang];
+
+  document.querySelectorAll('.lang-option').forEach(el => {
+    const lang = el.getAttribute('onclick').match(/'(\w+)'/)[1];
+    el.classList.toggle('active', lang === currentLang);
+  });
+
+  const resumeText = document.getElementById('resume-banner-text');
+  if (resumeText) resumeText.textContent = t('resume_text');
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('ranktune_lang', lang);
+  applyLang();
+  toggleLangDropdown(false);
+}
+
+function toggleLangDropdown(force) {
+  const dd = document.getElementById('lang-dropdown');
+  const isOpen = dd.classList.contains('open');
+  dd.classList.toggle('open', force !== undefined ? force : !isOpen);
+}
+
+document.addEventListener('click', e => { if (!e.target.closest('.lang-selector')) toggleLangDropdown(false); });
+applyLang();
+
+function cleanTrackTitle(title) {
+  if (!title) return '';
+  return title
+    .replace(/\s*[\(\[].*?(feat\.|ft\.|with|featuring).*?[\)\]]/gi, '') 
+    .replace(/\s*[-–]\s*(bonus|deluxe|remaster|live|remix|edit|version|acoustic).*$/gi, '') 
+    .replace(/\s*[\(\[]\s*(bonus|deluxe|remaster|live|remix|edit|version|acoustic).*?[\)\]]/gi, '') 
+    .trim();
+}
+
+function cleanStringForMatch(str) {
+  if (!str) return '';
+  return str.toLowerCase().trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') 
+    .replace(/[^\w\s\u0590-\u05ff]/g, ' ') 
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isArtistMatch(spotifyArtist, iTunesArtist) {
+  if (!spotifyArtist || !iTunesArtist) return false;
+  const sArtist = cleanStringForMatch(spotifyArtist);
+  const iArtist = cleanStringForMatch(iTunesArtist);
+  if (sArtist === iArtist) return true;
+  if (sArtist.includes(iArtist) || iArtist.includes(sArtist)) return true;
+  
+  const sWords = sArtist.split(' ').filter(w => w.length > 2);
+  const iWords = iArtist.split(' ').filter(w => w.length > 2);
+  if (sWords.length === 0 || iWords.length === 0) {
+    const sShort = sArtist.split(' ');
+    const iShort = iArtist.split(' ');
+    return sShort.some(w => iShort.includes(w));
+  }
+  return sWords.some(w => iWords.includes(w));
+}
+
+function getTrackSearchVariations(title) {
+  const variations = [];
+  const cleaned = cleanTrackTitle(title);
+  variations.push(cleaned);
+  
+  if (cleaned.includes('-')) {
+    const parts = cleaned.split('-');
+    const afterHyphen = parts[parts.length - 1].trim();
+    if (afterHyphen.length > 2) variations.push(afterHyphen);
+    const beforeHyphen = parts[0].trim();
+    if (beforeHyphen.length > 2) variations.push(beforeHyphen);
+  }
+  
+  const noTags = cleaned.replace(/intro\s*[-–:]\s*/i, '')
+                        .replace(/interlude\s*[-–:]\s*/i, '')
+                        .replace(/outro\s*[-–:]\s*/i, '')
+                        .trim();
+  if (noTags !== cleaned && noTags.length > 2) {
+    variations.push(noTags);
+  }
+  return [...new Set(variations)];
+}
+
+let _token = '', _tokenExp = 0;
+
+async function getToken() {
+  if (_token && Date.now() < _tokenExp) return _token;
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET) },
+    body: 'grant_type=client_credentials'
+  });
+  const d = await r.json();
+  _token    = d.access_token;
+  _tokenExp = Date.now() + d.expires_in * 1000 - 30000;
+  return _token;
+}
+
+async function spFetch(path, params = {}) {
+  const tok = await getToken();
+  const qs  = Object.keys(params).length ? '?' + new URLSearchParams(params) : '';
+  const r   = await fetch('https://api.spotify.com/v1' + path + qs, { headers: { Authorization: 'Bearer ' + tok } });
+  if (!r.ok) throw new Error('Spotify ' + r.status);
+  return r.json();
+}
+
+let currentAlbum = null, albumCover = '';
+let tracks = [], ratings = {}, comparisons = [], compIdx = 0;
+let history = []; 
+
+let liveSearchTimeout;
+document.getElementById('artist-input').addEventListener('input', () => {
+  clearTimeout(liveSearchTimeout);
+  const val = document.getElementById('artist-input').value.trim();
+  if (val.length < 2) {
+    document.getElementById('albums-results').innerHTML = '';
+    document.getElementById('search-status').innerHTML = '';
+    return;
+  }
+  liveSearchTimeout = setTimeout(() => { doSearch(); }, 300);
+});
+
+document.getElementById('link-btn').addEventListener('click', doLinkImport);
+document.getElementById('link-input').addEventListener('keydown', e => { if(e.key==='Enter') doLinkImport(); });
+
+function saveSessionToLocalStorage() {
+  if (!currentAlbum) return;
+  const session = { currentAlbum, albumCover, tracks, ratings, comparisons, compIdx, history, albumPreviewCache, correctArtistId };
+  localStorage.setItem('ranktune_saved_session', JSON.stringify(session));
+}
+
+function clearSavedSession() { localStorage.removeItem('ranktune_saved_session'); }
+
+function checkAndDisplaySavedSession() {
+  const saved = localStorage.getItem('ranktune_saved_session');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.currentAlbum && parsed.tracks && parsed.tracks.length > 0) {
+        document.getElementById('resume-banner').style.display = 'flex';
+        document.getElementById('resume-banner-text').textContent = t('resume_text');
+      }
+    } catch (e) { clearSavedSession(); }
+  }
+}
+
+document.getElementById('resume-yes-btn').addEventListener('click', () => {
+  const saved = localStorage.getItem('ranktune_saved_session');
+  if (saved) {
+    try {
+      const session = JSON.parse(saved);
+      currentAlbum = session.currentAlbum; albumCover = session.albumCover; tracks = session.tracks;
+      ratings = session.ratings; comparisons = session.comparisons; compIdx = session.compIdx;
+      history = session.history || []; albumPreviewCache = session.albumPreviewCache || {};
+      correctArtistId = session.correctArtistId || null;
+
+      document.getElementById('resume-banner').style.display = 'none';
+      document.getElementById('search-section').style.display  = 'none';
+      document.getElementById('ranking-section').style.display = 'block';
+      document.getElementById('duel-phase').style.display      = 'block';
+      document.getElementById('results-phase').style.display   = 'none';
+      document.getElementById('stats-link').style.display      = 'none';
+
+      document.getElementById('sel-img').src          = albumCover;
+      document.getElementById('sel-name').textContent = currentAlbum.name;
+      
+      const artistNames = currentAlbum.artists?.map(a => a.name).join(', ') || '';
+      document.getElementById('sel-meta').textContent = artistNames + ' · ' + (currentAlbum.release_date?.slice(0,4)||'') + ' · ' + currentAlbum.total_tracks + ' ' + (currentAlbum.total_tracks>1?t('tracks'):t('track_single'));
+
+      updateDuel();
+    } catch(e) { clearSavedSession(); document.getElementById('resume-banner').style.display = 'none'; }
+  }
+});
+document.getElementById('resume-no-btn').addEventListener('click', () => { clearSavedSession(); document.getElementById('resume-banner').style.display = 'none'; });
+
+window.onload = function() { checkAndDisplaySavedSession(); };
+
+function extractSpotifyId(input, type) {
+  const urlMatch = input.match(new RegExp(`open\\.spotify\\.com\\/${type}\\/([A-Za-z0-9]+)`));
+  if (urlMatch) return urlMatch[1];
+  const uriMatch = input.match(new RegExp(`spotify:${type}:([A-Za-z0-9]+)`));
+  if (uriMatch) return uriMatch[1];
+  return null;
+}
+
+async function doLinkImport() {
+  const input = document.getElementById('link-input').value.trim();
+  if (!input) return;
+  const statusEl = document.getElementById('search-status');
+  const NavResultsEl = document.getElementById('albums-results');
+  statusEl.innerHTML = '<div class="loader"><span class="spinner"></span>Chargement...</div>';
+  NavResultsEl.innerHTML = '';
+  try {
+    const artistId = extractSpotifyId(input, 'artist');
+    if (artistId) {
+      const artist = await spFetch(`/artists/${artistId}`);
+      loadArtistAlbums(artist); return;
+    }
+    const albumId = extractSpotifyId(input, 'album');
+    if (albumId) {
+      const alb = await spFetch(`/albums/${albumId}`);
+      statusEl.innerHTML = ''; selectAlbum(alb, alb.images[0]?.url || ''); return;
+    }
+    const playlistId = extractSpotifyId(input, 'playlist');
+    if (playlistId) { await loadPlaylist(playlistId); return; }
+    statusEl.innerHTML = '<div class="error-msg">Lien non reconnu. Utilisez un lien Spotify artiste, album ou playlist.</div>';
+  } catch(e) { statusEl.innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`; }
+}
+
+async function doSearch() {
+  const artistQuery = document.getElementById('artist-input').value.trim();
+  if (!artistQuery) return;
+  const statusEl = document.getElementById('search-status');
+  const NavResultsEl = document.getElementById('albums-results');
+  statusEl.innerHTML = `<div class="loader"><span class="spinner"></span>${t('searching')}</div>`;
+  NavResultsEl.innerHTML = '';
+
+  try {
+    const data = await spFetch('/search', { q: artistQuery, type:'artist', limit:20 });
+    let artists = data.artists.items;
+    const queryLower = artistQuery.toLowerCase();
+
+    artists.sort((a, b) => {
+      const aName = a.name.toLowerCase(); const bName = b.name.toLowerCase();
+      const aExact = aName === queryLower ? 0 : aName.startsWith(queryLower) ? 1 : 2;
+      const bExact = bName === queryLower ? 0 : bName.startsWith(queryLower) ? 1 : 2;
+      if (aExact !== bExact) return aExact - bExact;
+      return (b.popularity||0) - (a.popularity||0);
+    });
+
+    statusEl.innerHTML = '';
+    if (!artists.length) { statusEl.innerHTML = `<div class="error-msg">${t('no_artist')}</div>`; return; }
+
+    const exactMatches = artists.filter(a => a.name.toLowerCase() === queryLower);
+    if (exactMatches.length === 1) {
+      statusEl.innerHTML = '<div class="loader"><span class="spinner"></span>Chargement des albums...</div>';
+      loadArtistAlbums(exactMatches[0]); return;
+    }
+
+    statusEl.innerHTML = `<p class="section-label">${t('choose_artist')}</p>`;
+    const list = document.createElement('div');
+    list.className = 'artists-list';
+    artists.forEach(artist => {
+      const img = artist.images[0]?.url || '';
+      const followers = artist.followers?.total ? artist.followers.total.toLocaleString() + ' ' + t('followers') : '';
+      const card = document.createElement('div'); card.className = 'artist-card';
+      card.innerHTML = img ? `<img class="artist-avatar" src="${img}" alt="${artist.name}">` : `<div class="artist-avatar" style="background:var(--surface2)"></div>`;
+      card.innerHTML += `<div><div class="artist-info-name">${artist.name}</div>${followers ? `<div class="artist-info-followers">${followers}</div>` : ''}</div>`;
+      card.addEventListener('click', () => {
+        statusEl.innerHTML = `<div class="loader"><span class="spinner"></span>${t('loading')}</div>`;
+        NavResultsEl.innerHTML = ''; loadArtistAlbums(artist);
+      });
+      list.appendChild(card);
+    });
+    NavResultsEl.appendChild(list);
+  } catch(e) { statusEl.innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`; }
+}
+
+async function loadArtistAlbums(artist) {
+  const statusEl = document.getElementById('search-status');
+  const NavResultsEl = document.getElementById('albums-results');
+
+  try {
+    let albums = [], deluxe = [], eps = [], singles = [];
+    const seen = new Set(), seenDeluxe = new Set();
+
+    function normalizeAlbumName(name) { return name.toLowerCase().replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').replace(/deluxe|remastered|edition|version|bonus/gi, '').trim(); }
+    function isDeluxe(name) { return /deluxe|remastered|edition|bonus|extended/i.test(name); }
+
+    let offsetA = 0;
+    while (true) {
+      const d = await spFetch(`/artists/${artist.id}/albums`, { include_groups: 'album,compilation', limit:50, offset:offsetA });
+      for (const alb of d.items) {
+        const key = normalizeAlbumName(alb.name);
+        if (alb.album_type === 'single' || (alb.total_tracks <= 6 && alb.album_type !== 'album')) {
+          if (!seen.has(key)) { seen.add(key); eps.push(alb); }
+        } else if (isDeluxe(alb.name)) {
+          if (!seenDeluxe.has(key)) { seenDeluxe.add(key); deluxe.push(alb); }
+        } else {
+          if (!seen.has(key)) { seen.add(key); albums.push(alb); }
+        }
+      }
+      offsetA += 50; if (!d.next) break;
+    }
+
+    let offsetS = 0;
+    while (true) {
+      const d = await spFetch(`/artists/${artist.id}/albums`, { include_groups: 'single', limit:50, offset:offsetS });
+      for (const alb of d.items) {
+        const key = normalizeAlbumName(alb.name);
+        if (!seen.has(key)) {
+          seen.add(key);
+          if (alb.total_tracks > 2) eps.push(alb); else singles.push(alb);
+        }
+      }
+      offsetS += 50; if (!d.next) break;
+    }
+
+    // Tri chronologique des albums du plus vieux au plus récent
+    [albums, deluxe, eps, singles].forEach(arr => arr.sort((a,b) => (a.release_date||'').localeCompare(b.release_date||'')));
+
+    statusEl.innerHTML = ''; NavResultsEl.innerHTML = '';
+
+    if (!albums.length && !deluxe.length && !eps.length && !singles.length) {
+      statusEl.innerHTML = '<div class="error-msg">Aucun album trouvé pour cet artiste.</div>'; return;
+    }
+
+    const allAlbumsList = [...albums, ...deluxe, ...eps, ...singles];
+    const artistCover = artist.images[0]?.url || '';
+
+    // Option unique de classement de toute la discographie de l'artiste
+    const allTracksGroup = document.createElement('div');
+    allTracksGroup.innerHTML = `
+      <div class="group-separator">
+        <div class="group-separator-line"></div>
+        <div class="group-separator-label">
+           <span data-i18n="all_tracks_by">${t('all_tracks_by')}</span> ${artist.name}
+        </div>
+        <div class="group-separator-line"></div>
+      </div>
+      <div class="albums-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-bottom: 12px;">
+        <div class="album-card special-card" id="all-tracks-card">
+           <div class="img-wrap"><img src="${artistCover}" alt="${artist.name}"></div>
+           <div class="album-name" style="font-size: 14px; font-weight: 700; color: var(--accent);" data-i18n="rank_all">${t('rank_all')}</div>
+           <div class="album-meta" style="color: var(--text); opacity: 0.8;" data-i18n="playlist_mode">${t('playlist_mode')}</div>
+        </div>
+      </div>
+    `;
+    NavResultsEl.appendChild(allTracksGroup);
+    document.getElementById('all-tracks-card').addEventListener('click', () => {
+         rankAllTracks(artist, allAlbumsList, artistCover);
+    });
+
+    function renderGroup(label, items) {
+      if (!items.length) return;
+      const sep = document.createElement('div'); sep.className = 'group-separator';
+      sep.innerHTML = `<div class="group-separator-line"></div><div class="group-separator-label">${label}</div><div class="group-separator-line"></div>`;
+      NavResultsEl.appendChild(sep);
+      const grid = document.createElement('div'); grid.className = 'albums-grid';
+      items.forEach(alb => {
+        const img = alb.images[0]?.url || ''; const year = alb.release_date?.slice(0,4) || '';
+        const card = document.createElement('div'); card.className = 'album-card';
+        card.innerHTML = `<div class="img-wrap"><img src="${img}" alt="${alb.name}" loading="lazy"></div><div class="album-name">${alb.name}</div><div class="album-meta">${year} · ${alb.total_tracks} ${alb.total_tracks>1?t('tracks'):t('track_single')}</div>`;
+        card.addEventListener('click', () => selectAlbum(alb, img));
+        grid.appendChild(card);
+      });
+      NavResultsEl.appendChild(grid);
+    }
+
+    renderGroup(t('albums_label'), albums); renderGroup(t('deluxe_label'), deluxe);
+    renderGroup(t('eps_label'), eps); renderGroup(t('singles_label'), singles);
+
+  } catch(e) { statusEl.innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`; }
+}
+
+async function rankAllTracks(artist, albumsList, cover) {
+  const statusEl = document.getElementById('search-status');
+  statusEl.innerHTML = `<div class="loader"><span class="spinner"></span>Récupération et déduplication de tous les titres... Cela peut prendre un moment.</div>`;
+  document.getElementById('albums-results').innerHTML = '';
+
+  try {
+    let allFetchedTracks = [];
+    for (let i = 0; i < albumsList.length; i += 20) {
+      const chunk = albumsList.slice(i, i + 20).map(a => a.id).join(',');
+      const d = await spFetch(`/albums?ids=${chunk}`);
+      d.albums.forEach(alb => {
+        if (alb && alb.tracks && alb.tracks.items) {
+          alb.tracks.items.forEach(t => {
+             allFetchedTracks.push({
+                ...t,
+                cover: alb.images[0]?.url || cover,
+                album_name: alb.name 
+             });
+          });
+        }
+      });
+    }
+
+    const uniqueTracksMap = new Map();
+    allFetchedTracks.forEach(t => {
+       const cleanName = cleanTrackTitle(t.name).toLowerCase();
+       if (!uniqueTracksMap.has(cleanName)) {
+         uniqueTracksMap.set(cleanName, {
+            id: t.id,
+            name: t.name,
+            duration_ms: t.duration_ms,
+            preview_url: t.preview_url,
+            artists: t.artists,
+            cover: t.cover,
+            track_number: t.track_number,
+            album_name: t.album_name 
+         });
+       }
+    });
+
+    const finalTracks = Array.from(uniqueTracksMap.values());
+
+    if (finalTracks.length === 0) {
+      statusEl.innerHTML = `<div class="error-msg">Aucun titre trouvé.</div>`;
+      return;
+    }
+
+    currentAlbum = {
+      id: 'all-tracks',
+      name: `${t('all_tracks_by')} : ${artist.name}`,
+      artists: [artist],
+      total_tracks: finalTracks.length,
+      release_date: ''
+    };
+    albumCover = cover;
+    tracks = finalTracks;
+    albumPreviewCache = {};
+    correctArtistId = null; 
+
+    document.getElementById('search-section').style.display  = 'none';
+    document.getElementById('resume-banner').style.display  = 'none';
+    document.getElementById('ranking-section').style.display = 'block';
+    document.getElementById('duel-phase').style.display      = 'block';
+    document.getElementById('results-phase').style.display   = 'none';
+    document.getElementById('stats-link').style.display      = 'none';
+
+    document.getElementById('sel-img').src          = cover;
+    document.getElementById('sel-name').textContent = currentAlbum.name;
+    document.getElementById('sel-meta').textContent = finalTracks.length + ' ' + t('tracks') + ' (Deduplicated)';
+
+    statusEl.innerHTML = '';
+    
+    const hasHebrew = tracks.some(t => /[\u0590-\u05FF]/.test(t.name));
+    const country = hasHebrew ? 'il' : 'us';
+    
+    // Étape 1 : Résoudre l'ID iTunes d'artiste unique avant le pré-cache
+    await resolveiTunesArtistId(artist.name, albumsList, country);
+    
+    // Étape 2 : Lancer le pré-cache via l'ID de l'artiste résolu
+    if (correctArtistId) {
+      await fetchSongsByArtistId(correctArtistId, country);
+    } else {
+      await loadAppleMusicPreviews(currentAlbum);
+    }
+    
+    initRanking();
+
+  } catch (e) {
+    statusEl.innerHTML = `<div class="error-msg">Erreur lors de la récupération : ${e.message}</div>`;
+  }
+}
+
+async function selectAlbum(alb, cover) {
+  currentAlbum = alb; albumCover = cover;
+
+  document.getElementById('search-section').style.display  = 'none';
+  document.getElementById('resume-banner').style.display  = 'none';
+  document.getElementById('ranking-section').style.display = 'block';
+  document.getElementById('duel-phase').style.display      = 'block';
+  document.getElementById('results-phase').style.display   = 'none';
+  document.getElementById('stats-link').style.display      = 'none';
+
+  document.getElementById('sel-img').src          = cover;
+  document.getElementById('sel-name').textContent = alb.name;
+  
+  const artistNames = currentAlbum.artists?.map(a => a.name).join(', ') || '';
+  document.getElementById('sel-meta').textContent = artistNames + ' · ' + (currentAlbum.release_date?.slice(0,4)||'') + ' · ' + currentAlbum.total_tracks + ' ' + (currentAlbum.total_tracks>1?t('tracks'):t('track_single'));
+  document.getElementById('prog-txt').textContent = 'Chargement...';
+
+  try { tracks = await fetchAllTracks(alb.id); }
+  catch(e) { alert('Erreur : ' + e.message); return; }
+
+  try { const fullAlbum = await spFetch(`/albums/${alb.id}`); alb = { ...alb, ...fullAlbum }; currentAlbum = alb; } catch(e) {}
+
+  albumPreviewCache = {};
+  correctArtistId = null;
+
+  const artistName = currentAlbum.artists?.[0]?.name || '';
+  const hasHebrew = tracks.some(t => /[\u0590-\u05FF]/.test(t.name));
+  const country = hasHebrew ? 'il' : 'us';
+  
+  // Résolution préalable de l'ID d'artiste unique iTunes
+  await resolveiTunesArtistId(artistName, [alb], country);
+
+  await loadAppleMusicPreviews(alb);
+  initRanking();
+}
+
+async function fetchAllTracks(albumId) {
+  let all = [], offset = 0;
+  while (true) {
+    const d = await spFetch(`/albums/${albumId}/tracks`, { limit:50, offset });
+    all = all.concat(d.items);
+    if (!d.next) break; offset += 50;
+  }
+  const fullTracks = [];
+  for (let i = 0; i < all.length; i += 50) {
+    const ids = all.slice(i, i+50).map(t => t.id).join(',');
+    try {
+      const d = await spFetch(`/tracks`, { ids });
+      fullTracks.push(...(d.tracks || []));
+    } catch(e) { fullTracks.push(...all.slice(i, i+50)); }
+  }
+  return fullTracks;
+}
+
+async function loadPlaylist(playlistId) {
+  const statusEl = document.getElementById('search-status');
+  try {
+    const pl = await spFetch(`/playlists/${playlistId}`);
+    let items = [], offset = 0;
+    while (true) {
+      const d = await spFetch(`/playlists/${playlistId}/tracks`, { limit:50, offset });
+      items = items.concat(d.items);
+      if (!d.next) break; offset += 50;
+    }
+    const cover = pl.images[0]?.url || '';
+    const fakeTracks = items.filter(it => it.track && it.track.id).map((it, idx) => ({
+      id: it.track.id, name: it.track.name, track_number: idx + 1, duration_ms: it.track.duration_ms,
+      preview_url: it.track.preview_url || null, artists: it.track.artists || [], cover: it.track.album?.images[0]?.url || cover,
+      album_name: it.track.album?.name || pl.name
+    }));
+    if (!fakeTracks.length) { statusEl.innerHTML = `<div class="error-msg">Playlist vide ou inaccessible.</div>`; return; }
+    
+    currentAlbum = { name: pl.name, artists: [{ name: 'Playlist' }], release_date: '', total_tracks: fakeTracks.length, id: 'playlist-' + playlistId };
+    albumCover = cover; tracks = fakeTracks; albumPreviewCache = {}; correctArtistId = null;
+
+    document.getElementById('search-section').style.display  = 'none';
+    document.getElementById('resume-banner').style.display  = 'none';
+    document.getElementById('ranking-section').style.display = 'block';
+    document.getElementById('duel-phase').style.display      = 'block';
+    document.getElementById('results-phase').style.display   = 'none';
+    document.getElementById('stats-link').style.display      = 'none';
+
+    document.getElementById('sel-img').src          = cover;
+    document.getElementById('sel-name').textContent = pl.name;
+    document.getElementById('sel-meta').textContent = fakeTracks.length + ' ' + t('tracks') + ' · Playlist';
+    statusEl.innerHTML = '';
+    initRanking();
+  } catch(e) { statusEl.innerHTML = `<div class="error-msg">Erreur playlist : ${e.message}</div>`; }
+}
+
+let currentAudio = null;
+let previewUrls = { a: null, b: null };
+let albumPreviewCache = {};
+let correctArtistId = null; 
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'itunes_cb_' + Math.round(1000000 * Math.random());
+    window[callbackName] = function(data) {
+      delete window[callbackName]; if (script.parentNode) document.body.removeChild(script); resolve(data);
+    };
+    const script = document.createElement('script');
+    script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+    script.onerror = (err) => { delete window[callbackName]; if (script.parentNode) document.body.removeChild(script); reject(new Error("JSONP Failed")); };
+    document.body.appendChild(script);
+  });
+}
+
+async function itunesApiRequest(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch(e) {
+    try { return await jsonp(url); } catch(err) { throw new Error(`API Connection Failed`); }
+  }
+}
+
+async function resolveiTunesArtistId(artistName, spotifyAlbums, country) {
+  if (correctArtistId) return correctArtistId;
+  
+  logDev(`🔍 Résolution de l'ID Apple Music de l'artiste pour éviter les homonymes...`, 'info');
+  
+  // Tentative de recherche de l'artiste via ses albums sur le store local
+  try {
+    const q = encodeURIComponent(artistName);
+    const url = `https://itunes.apple.com/search?term=${q}&entity=album&limit=50&country=${country}`;
+    const d = await itunesApiRequest(url);
+    
+    const spotifyAlbumNames = spotifyAlbums.map(a => cleanStringForMatch(a.name));
+    
+    for (const item of (d.results || [])) {
+      const itunesAlbumName = cleanStringForMatch(item.collectionName);
+      const isMatch = spotifyAlbumNames.some(sa => sa === itunesAlbumName || sa.includes(itunesAlbumName) || itunesAlbumName.includes(sa));
+      
+      if (isMatch && item.artistId) {
+        correctArtistId = item.artistId;
+        logDev(`🎯 ID Apple Music résolu : ${correctArtistId} (Morceau mappé sur "${item.collectionName}")`, 'success');
+        return correctArtistId;
+      }
+    }
+  } catch (e) {
+    logDev(`⚠️ Échec recherche ID artiste par albums : ${e.message}`, 'warn');
+  }
+  
+  // Fallback : recherche par titres célèbres avec détection de l'hébreu si nécessaire
+  try {
+    const q = encodeURIComponent(artistName);
+    const url = `https://itunes.apple.com/search?term=${q}&entity=song&limit=30&country=${country}`;
+    const d = await itunesApiRequest(url);
+    
+    for (const item of (d.results || [])) {
+      if (isArtistMatch(artistName, item.artistName)) {
+        const hasHebrewTrack = /[\u0590-\u05FF]/.test(item.trackName);
+        if (hasHebrewTrack && item.artistId) {
+          correctArtistId = item.artistId;
+          logDev(`🎯 ID Apple Music résolu par langue (Hébreu détecté) : ${correctArtistId}`, 'success');
+          return correctArtistId;
+        }
+      }
+    }
+  } catch (e) {
+    logDev(`⚠️ Échec de résolution fallback ID artiste : ${e.message}`, 'warn');
+  }
+  
+  return null;
+}
+
+async function fetchSongsByArtistId(artistId, country) {
+  logDev(`📥 Chargement de la discographie Apple Music de l'artiste (${artistId})...`, 'info');
+  try {
+    const url = `https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=200&country=${country}`;
+    const d = await itunesApiRequest(url);
+    let count = 0;
+    (d.results || []).filter(t => t.kind === 'song' && t.previewUrl).forEach(s => {
+      const raw = s.trackName?.toLowerCase().trim();
+      if (!raw) return;
+      albumPreviewCache[raw] = s.previewUrl;
+      albumPreviewCache[cleanStringForMatch(raw)] = s.previewUrl;
+      const clean = cleanTrackTitle(raw).toLowerCase();
+      if (clean && clean !== raw) {
+        albumPreviewCache[clean] = s.previewUrl;
+        albumPreviewCache[cleanStringForMatch(clean)] = s.previewUrl;
+      }
+      count++;
+    });
+    logDev(`✅ ${count} extraits chargés directement depuis le profil officiel de l'artiste !`, 'success');
+  } catch (e) {
+    logDev(`⚠️ Impossible de charger via l'ID de l'artiste : ${e.message}`, 'warn');
+  }
+}
+
+async function fetchPreviewsByIdGlobal(id, country) {
+  try {
+    const url = `https://itunes.apple.com/lookup?id=${id}&entity=song&country=${country}`;
+    const d = await itunesApiRequest(url);
+    let count = 0;
+    (d.results || []).filter(t => t.kind === 'song' && t.previewUrl).forEach(s => {
+      const raw = s.trackName?.toLowerCase().trim();
+      if (!raw) return;
+      albumPreviewCache[raw] = s.previewUrl;
+      albumPreviewCache[cleanStringForMatch(raw)] = s.previewUrl;
+      const clean = cleanTrackTitle(raw).toLowerCase();
+      if (clean && clean !== raw) {
+        albumPreviewCache[clean] = s.previewUrl;
+        albumPreviewCache[cleanStringForMatch(clean)] = s.previewUrl;
+      }
+      count++;
+    });
+    return count;
+  } catch(e) { return 0; }
+}
+
+async function loadAppleMusicPreviews(alb) {
+  clearDevLogs();
+  
+  if (alb.id.startsWith('playlist-')) {
+    logDev(`🚀 MODE PLAYLIST ACTIVÉ... La recherche se fera (morceau par morceau) lors des duels.`, 'info');
+    return;
+  }
+  
+  const artistName = alb.artists?.[0]?.name || alb.artists?.[0] || '';
+  const albumName  = alb.name || '';
+  const hasHebrew = /[\u0590-\u05FF]/.test(albumName) || /[\u0590-\u05FF]/.test(artistName);
+  const countries = hasHebrew ? ['il', 'us', 'fr', 'gb'] : ['fr', 'us', 'gb', 'il'];
+  
+  if (alb.id === 'all-tracks') {
+    logDev(`=======================================================`, 'highlight');
+    logDev(`🚀 MODE DISCOGRAPHIE GLOBALE : PRÉ-MISE EN CACHE MASSIVE`, 'highlight');
+    logDev(`=======================================================`, 'highlight');
+    return;
+  }
+
+  logDev(`=======================================================`, 'highlight');
+  logDev(`🚀 DÉMARRAGE DE LA RECHERCHE APPLE MUSIC (ALBUM)`, 'highlight');
+  logDev(`=======================================================`, 'highlight');
+  
+  logDev(`Artiste ciblé : "${artistName}"`);
+  logDev(`Album ciblé (brut) : "${albumName}"`);
+  
+  let itunesAccessible = true;
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 2500);
+    await fetch('https://itunes.apple.com/search?term=test&limit=1', { mode: 'no-cors', signal: controller.signal });
+    clearTimeout(id);
+  } catch(e) {
+    logDev(`⚠️ ALERT DE SYNCHRO : L'API iTunes est actuellement inaccessible !`, 'warn');
+  }
+
+  function getAlbumScore(spotifyAlbum, iTunesAlbum) {
+    const sAlb = cleanStringForMatch(spotifyAlbum);
+    const iAlb = cleanStringForMatch(iTunesAlbum);
+    if (sAlb === iAlb) return 100;
+    if (sAlb.includes(iAlb) || iAlb.includes(sAlb)) return 80;
+    const sWords = sAlb.split(' ').filter(w => w.length > 1);
+    const iWords = iAlb.split(' ').filter(w => w.length > 1);
+    let matches = 0; sWords.forEach(w => { if (iWords.includes(w)) matches++; });
+    return matches;
+  }
+
+  const upc = alb.external_ids?.upc;
+  let upcSuccess = false;
+  if (upc && upc.length > 5) {
+    logDev(`\n[ÉTAPE 1] Tentative de recherche via UPC : ${upc}`, 'warn');
+    for (const country of countries) {
+      try {
+        const url = `https://itunes.apple.com/lookup?upc=${upc}&entity=song&country=${country}`;
+        const d = await itunesApiRequest(url);
+        const songs = (d.results || []).filter(t => t.kind === 'song' && t.previewUrl);
+        if (songs.length > 0) {
+          songs.forEach(s => {
+            const raw = s.trackName?.toLowerCase().trim();
+            if (raw) {
+              albumPreviewCache[raw] = s.previewUrl;
+              albumPreviewCache[cleanStringForMatch(raw)] = s.previewUrl;
+              const clean = cleanTrackTitle(raw).toLowerCase();
+              if (clean && clean !== raw) {
+                albumPreviewCache[clean] = s.previewUrl;
+                albumPreviewCache[cleanStringForMatch(clean)] = s.previewUrl;
+              }
+            }
+          });
+          logDev(`✅ Succès UPC : extraits chargés via l'UPC exact (${country})`, 'success');
+          upcSuccess = true; break;
+        }
+        const collection = (d.results || []).find(t => t.wrapperType === 'collection');
+        if (collection?.collectionId) {
+          const countFromId = await fetchPreviewsByIdGlobal(collection.collectionId, country);
+          if (countFromId > 0) { logDev(`✅ Succès UPC Collection (${country})`, 'success'); upcSuccess = true; break; }
+        }
+      } catch(e) {}
+    }
+  }
+
+  let searchSuccess = upcSuccess, foundCollectionId = null, foundCountry = 'fr';
+
+  if (!searchSuccess) {
+    logDev(`\n[ÉTAPE 2] Recherche progressive de l'album...`, 'warn');
+    const cleanSearchAlbum = cleanTrackTitle(albumName);
+    const termsToTry = [`${artistName} ${cleanSearchAlbum}`, artistName];
+
+    for (const term of termsToTry) {
+      if (foundCollectionId) break;
+      for (const country of countries) {
+        if (foundCollectionId) break;
+        try {
+          const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=25&country=${country}`;
+          const d = await itunesApiRequest(url);
+          let bestAlbum = null, bestScore = 0;
+
+          (d.results || []).forEach(a => {
+            if (!isArtistMatch(artistName, a.artistName)) return;
+            const score = getAlbumScore(albumName, a.collectionName);
+            if (score > bestScore) { bestScore = score; bestAlbum = a; }
+          });
+          if (bestAlbum && (bestScore > 0 || term === artistName)) {
+            foundCollectionId = bestAlbum.collectionId; foundCountry = country;
+            logDev(`🎯 Match trouvé : "${bestAlbum.collectionName}" (Score: ${bestScore})`, 'success'); break;
+          }
+        } catch(e) {}
+      }
+    }
+    if (foundCollectionId) {
+      if (await fetchPreviewsByIdGlobal(foundCollectionId, foundCountry) > 0) searchSuccess = true;
+    }
+  }
+
+  if (!searchSuccess && tracks.length > 0) {
+    logDev(`\n[ÉTAPE 3] Fallback : Alignement par morceaux`, 'warn');
+    const finalCandidates = tracks.filter(t => !t.name.toLowerCase().includes('intro') && t.name.length > 4).slice(0, 3);
+    
+    for (const cand of finalCandidates.length ? finalCandidates : tracks.slice(0, 3)) {
+      if (foundCollectionId) break;
+      const cleanTrackName = cleanTrackTitle(cand.name);
+      
+      for (const country of countries) {
+        if (foundCollectionId) break;
+        try {
+          const q = encodeURIComponent(artistName + ' ' + cleanTrackName);
+          const url = `https://itunes.apple.com/search?term=${q}&entity=song&limit=10&country=${country}`;
+          const d = await itunesApiRequest(url);
+          
+          const matchedSong = (d.results || []).find(it => {
+            return isArtistMatch(artistName, it.artistName) && 
+                   (cleanStringForMatch(it.trackName) === cleanStringForMatch(cleanTrackName) || 
+                    cleanStringForMatch(it.trackName).includes(cleanStringForMatch(cleanTrackName)));
+          });
+          
+          if (matchedSong && matchedSong.collectionId) {
+            foundCollectionId = matchedSong.collectionId; foundCountry = country;
+            logDev(`🎯 Match de morceau : "${matchedSong.trackName}" -> Album ID ${foundCollectionId}`, 'success'); break;
+          }
+        } catch(e) {}
+      }
+    }
+    if (foundCollectionId) {
+      if (await fetchPreviewsByIdGlobal(foundCollectionId, foundCountry) > 0) searchSuccess = true;
+    }
+  }
+
+  logDev(`\n[ÉTAPE 4] Comparaison et liaison définitive`, 'highlight');
+  let matchCount = 0;
+  
+  tracks.forEach(track => {
+    const tName = track.name.toLowerCase().trim();
+    const tClean = cleanTrackTitle(tName).toLowerCase();
+    
+    let urlFound = albumPreviewCache[tName] || albumPreviewCache[tClean] || albumPreviewCache[cleanStringForMatch(tName)] || albumPreviewCache[cleanStringForMatch(tClean)];
+    
+    if (!urlFound) {
+      const sTrackCleaned = cleanStringForMatch(tClean);
+      for (const key of Object.keys(albumPreviewCache)) {
+        const cleanedKey = cleanStringForMatch(key);
+        if (cleanedKey === sTrackCleaned || (cleanedKey.includes(sTrackCleaned) && sTrackCleaned.length > 2)) {
+          urlFound = albumPreviewCache[key]; albumPreviewCache[track.name] = urlFound; break;
+        }
+      }
+    }
+    if (urlFound) { matchCount++; }
+  });
+
+  logDev(`🏁 BILAN : ${matchCount} extraits trouvés d'emblée`, 'highlight');
+}
+
+function checkCacheForTrack(trackName) {
+  const cacheKey = trackName.toLowerCase().trim();
+  if (albumPreviewCache[cacheKey]) return albumPreviewCache[cacheKey];
+
+  const trackClean = cleanTrackTitle(trackName);
+  const sTrackCleaned = cleanStringForMatch(trackName);
+  const sTrackCleanedNoSuffix = cleanStringForMatch(trackClean);
+
+  if (albumPreviewCache[trackClean.toLowerCase()]) return albumPreviewCache[trackClean.toLowerCase()];
+  if (albumPreviewCache[sTrackCleaned]) return albumPreviewCache[sTrackCleaned];
+  if (albumPreviewCache[sTrackCleanedNoSuffix]) return albumPreviewCache[sTrackCleanedNoSuffix];
+
+  const cacheKeys = Object.keys(albumPreviewCache);
+  for (const key of cacheKeys) {
+      if (key.startsWith('_album_cached_')) continue;
+      const cleanedKey = cleanStringForMatch(key);
+      if (cleanedKey === sTrackCleaned || cleanedKey === sTrackCleanedNoSuffix) return albumPreviewCache[key];
+      if (cleanedKey.includes(sTrackCleanedNoSuffix) && sTrackCleanedNoSuffix.length > 2) return albumPreviewCache[key];
+      if (sTrackCleanedNoSuffix.includes(cleanedKey) && cleanedKey.length > 3) return albumPreviewCache[key];
+  }
+  return null;
+}
+
+async function getPreviewUrl(track) {
+  if (track.preview_url) return track.preview_url;
+
+  const artistName = (track.artists?.[0]?.name) || currentAlbum?.artists?.[0]?.name || '';
+  const trackName = track.name;
+
+  // 1. Première vérification de cache local (Rapide)
+  let url = checkCacheForTrack(trackName);
+  if (url) return url;
+
+  const hasHebrew = /[\u0590-\u05FF]/.test(trackName) || /[\u0590-\u05FF]/.test(artistName);
+  const countries = hasHebrew ? ['il', 'us', 'fr', 'gb'] : ['fr', 'gb', 'us', 'ca', 'de', 'il'];
+
+  // 2. On-Demand Album Caching (si la chanson mémorise son album original)
+  if (track.album_name && !albumPreviewCache[`_album_cached_${track.album_name}`]) {
+      albumPreviewCache[`_album_cached_${track.album_name}`] = true;
+      logDev(`[On-Demand] Cache miss pour "${trackName}". Recherche de l'album Spotify : "${track.album_name}"...`, 'warn');
+      let albumFound = false;
+      
+      for (const country of countries) {
+          if (albumFound) break;
+          try {
+              const term = `${artistName} ${cleanTrackTitle(track.album_name)}`;
+              const aUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=4&country=${country}`;
+              const d = await itunesApiRequest(aUrl);
+              
+              for (const a of (d.results || [])) {
+                  const fuzzyArtist = isArtistMatch(artistName, a.artistName) || a.artistName.toLowerCase().includes(artistName.toLowerCase()) || (hasHebrew && a.artistName.length > 0);
+                  if (fuzzyArtist) {
+                      logDev(`[On-Demand] Album trouvé : "${a.collectionName}" (${country}). Mise en cache des morceaux...`, 'success');
+                      const count = await fetchPreviewsByIdGlobal(a.collectionId, country);
+                      if (count > 0) {
+                          albumFound = true; break;
+                      }
+                  }
+              }
+          } catch(e) {}
+      }
+      
+      // Deuxième vérification après récupération On-Demand
+      url = checkCacheForTrack(trackName);
+      if (url) {
+          logDev(`✅ Extrait aligné avec succès pour "${trackName}" !`, 'success');
+          return url;
+      }
+  }
+
+  // 3. Fallback : Recherche individuelle filtrée par l'ID d'artiste résolu (Évite tout bug de langue croisée !)
+  const variations = getTrackSearchVariations(trackName);
+  logDev(`🔍 Recherche individuelle pour "${trackName}" (Variations : ${variations.join(', ')})`, 'info');
+
+  for (const variation of variations) {
+    for (const country of countries) {
+      try {
+        // RECHERCHE SUR LE TITRE SEUL - Puis filtrage par ID unique pour éviter les homonymes et le mélange de langues
+        const sUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(variation)}&entity=song&limit=100&country=${country}`;
+        const d = await itunesApiRequest(sUrl);
+        
+        const match = (d.results || []).find(t => {
+          // Si nous avons résolu l'ID d'artiste unique iTunes, l'exiger pour un alignement parfait !
+          if (correctArtistId && t.artistId === correctArtistId) {
+            return true;
+          }
+          // Fallback sans ID d'artiste
+          if (isArtistMatch(artistName, t.artistName)) {
+            const tClean = cleanStringForMatch(t.trackName);
+            const vClean = cleanStringForMatch(variation);
+            return (tClean === vClean || tClean.includes(vClean) || vClean.includes(tClean));
+          }
+          return false;
+        });
+
+        if (match?.previewUrl) {
+          logDev(`✅ Extrait trouvé via ID de l'artiste ou nom pour "${trackName}" : "${match.trackName}" (${country})`, 'success');
+          albumPreviewCache[trackName.toLowerCase().trim()] = match.previewUrl;
+          return match.previewUrl;
+        }
+      } catch(e) {}
+    }
+
+    // Ultime secours : Recherche combinée classique
+    const query1 = `${artistName} ${variation}`;
+    for (const country of countries) {
+      try {
+        const sUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query1)}&entity=song&limit=10&country=${country}`;
+        const d = await itunesApiRequest(sUrl);
+        
+        const match = (d.results || []).find(t => {
+          const tClean = cleanStringForMatch(t.trackName);
+          const vClean = cleanStringForMatch(variation);
+          const isMatch = (tClean === vClean || tClean.includes(vClean) || vClean.includes(tClean));
+          return isMatch && (isArtistMatch(artistName, t.artistName) || t.artistName.toLowerCase().includes(artistName.toLowerCase()));
+        });
+
+        if (match?.previewUrl) {
+          logDev(`✅ Extrait trouvé via recherche combinée de secours pour "${trackName}" : "${match.trackName}" (${country})`, 'success');
+          albumPreviewCache[trackName.toLowerCase().trim()] = match.previewUrl;
+          return match.previewUrl;
+        }
+      } catch(e) {}
+    }
+  }
+
+  logDev(`❌ Aucun extrait trouvé pour "${trackName}"`, 'error');
+  return null;
+}
+
+async function togglePreview(side, e) {
+  e.stopPropagation(); 
+  const btn = document.getElementById('preview-' + side);
+  if (btn.classList.contains('unavailable')) return;
+
+  if (btn.classList.contains('playing')) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    btn.textContent = t('listen'); btn.classList.remove('playing'); return;
+  }
+
+  stopAllPreviews();
+
+  const url = previewUrls[side];
+  if (!url) return;
+
+  const audio = new Audio(url);
+  audio.volume = 0.8; currentAudio = audio;
+  btn.textContent = t('stop'); btn.classList.add('playing');
+
+  audio.onended = () => {
+    btn.textContent = t('listen'); btn.classList.remove('playing');
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  try { await audio.play(); } catch (err) {
+    console.warn('Audio playback safely interrupted:', err);
+    if (currentAudio === audio) { btn.textContent = t('listen'); btn.classList.remove('playing'); currentAudio = null; }
+  }
+}
+
+function stopAllPreviews() {
+  if (currentAudio) { try { currentAudio.pause(); } catch(e) {} currentAudio = null; }
+  ['a','b'].forEach(s => {
+    const btn = document.getElementById('preview-' + s);
+    if (btn) { btn.textContent = t('listen'); btn.classList.remove('playing'); }
+  });
+}
+
+function initRanking() {
+  ratings = {}; history = [];
+  tracks.forEach(t => { ratings[t.id] = 1000; });
+  comparisons = buildPairs(tracks); compIdx = 0;
+  saveSessionToLocalStorage(); updateDuel();
+}
+
+function buildPairs(tracks) {
+  const pairs = [];
+  for (let i=0; i<tracks.length; i++) for (let j=i+1; j<tracks.length; j++) pairs.push([i,j]);
+  for (let i=pairs.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [pairs[j], pairs[i]] = [pairs[i], pairs[j]];
+  }
+  return pairs.slice(0, Math.min(pairs.length, tracks.length * 3));
+}
+
+function fmtDur(ms) { const s = Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+function updateDuel() {
+  const total = comparisons.length;
+  document.getElementById('prog-txt').textContent  = compIdx + ' / ' + total;
+  document.getElementById('prog-fill').style.width = (total ? Math.round(compIdx/total*100) : 0) + '%';
+  if (compIdx >= total) { showResults(); return; }
+
+  stopAllPreviews(); previewUrls = { a: null, b: null };
+
+  const [ia, ib] = comparisons[compIdx];
+  const ta = tracks[ia], tb = tracks[ib];
+
+  document.getElementById('cover-a').src        = ta.cover || albumCover;
+  document.getElementById('cover-b').src        = tb.cover || albumCover;
+  document.getElementById('num-a').textContent  = ta.track_number ? (t('track_label') + ' ' + ta.track_number) : '';
+  document.getElementById('name-a').textContent = ta.name;
+  document.getElementById('dur-a').textContent  = fmtDur(ta.duration_ms);
+  document.getElementById('num-b').textContent  = tb.track_number ? (t('track_label') + ' ' + tb.track_number) : '';
+  document.getElementById('name-b').textContent = tb.name;
+  document.getElementById('dur-b').textContent  = fmtDur(tb.duration_ms);
+
+  ['a','b'].forEach(s => {
+    const btn = document.getElementById('preview-' + s);
+    btn.textContent = t('listen'); btn.classList.remove('playing', 'unavailable');
+  });
+
+  getPreviewUrl(ta).then(url => {
+    previewUrls.a = url; const btn = document.getElementById('preview-a');
+    if (!url) { btn.textContent = t('no_preview'); btn.classList.add('unavailable'); }
+  });
+  getPreviewUrl(tb).then(url => {
+    previewUrls.b = url; const btn = document.getElementById('preview-b');
+    if (!url) { btn.textContent = t('no_preview'); btn.classList.add('unavailable'); }
+  });
+
+  ['card-a','card-b'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.animation='none'; el.offsetHeight; el.style.animation='slideUp .2s ease both';
+  });
+}
+
+function eloUpdate(winId, loseId, draw=false) {
+  const K=32, Ra=ratings[winId], Rb=ratings[loseId];
+  const Ea = 1/(1+Math.pow(10,(Rb-Ra)/400));
+  ratings[winId]  = Ra + K*(draw ? .5 : 1-Ea);
+  ratings[loseId] = Rb + K*(draw ? .5 : 0-(1-Ea));
+  saveSessionToLocalStorage();
+}
+
+function selectOptionA() { if(compIdx>=comparisons.length) return; stopAllPreviews(); const [ia,ib]=comparisons[compIdx]; history.push({ compIdx, ratings: {...ratings} }); eloUpdate(tracks[ia].id,tracks[ib].id); compIdx++; updateDuel(); }
+function selectOptionB() { if(compIdx>=comparisons.length) return; stopAllPreviews(); const [ia,ib]=comparisons[compIdx]; history.push({ compIdx, ratings: {...ratings} }); eloUpdate(tracks[ib].id,tracks[ia].id); compIdx++; updateDuel(); }
+function selectSkip() { if(compIdx>=comparisons.length) return; stopAllPreviews(); const [ia,ib]=comparisons[compIdx]; history.push({ compIdx, ratings: {...ratings} }); eloUpdate(tracks[ia].id,tracks[ib].id,true); compIdx++; updateDuel(); }
+function selectUndo() { if (!history.length) return; stopAllPreviews(); const prev = history.pop(); compIdx = prev.compIdx; ratings = prev.ratings; saveSessionToLocalStorage(); updateDuel(); }
+
+document.addEventListener('keydown', e => {
+  const activeTag = document.activeElement.tagName.toLowerCase();
+  if (activeTag === 'input' || activeTag === 'textarea') return;
+  const duelSection = document.getElementById('ranking-section'); const duelPhase = document.getElementById('duel-phase');
+  if (duelSection.style.display === 'block' && duelPhase.style.display !== 'none') {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); selectOptionA(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); selectOptionB(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); selectSkip(); }
+    else if (e.key === 'Backspace' || e.key === 'Escape') { e.preventDefault(); selectUndo(); }
+  }
+});
+
+document.getElementById('card-a').addEventListener('click', selectOptionA);
+document.getElementById('card-b').addEventListener('click', selectOptionB);
+document.getElementById('skip-btn').addEventListener('click', selectSkip);
+document.getElementById('undo-btn').addEventListener('click', selectUndo);
+
+function openStatsModal() {
+  const sorted = [...tracks].sort((a,b) => ratings[b.id] - ratings[a.id]);
+  if (!sorted.length) return;
+
+  const maxElo = ratings[sorted[0].id], minElo = ratings[sorted[sorted.length - 1].id], range = maxElo - minElo;
+  function getAppreciationPct(trackId) {
+    if (range === 0) return 100;
+    const score = ratings[trackId]; const rawPct = (score - minElo) / range;
+    return Math.round(rawPct * 80 + 20); 
+  }
+
+  const fav = sorted[0], least = sorted[sorted.length - 1];
+  const summaryEl = document.getElementById('stats-summary');
+  summaryEl.innerHTML = `
+    <div style="background:var(--surface2); padding:14px; border-radius:12px; border:1px solid var(--border);">
+      <div style="font-size:11px; text-transform:uppercase; color:var(--accent); letter-spacing:1px; margin-bottom:4px;" data-i18n="stats_favorite">${t('stats_favorite')}</div>
+      <div style="font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${fav.name}</div>
+      <div style="font-size:18px; font-weight:700; color:var(--text); margin-top:4px;">100%</div>
+    </div>
+    <div style="background:var(--surface2); padding:14px; border-radius:12px; border:1px solid var(--border);">
+      <div style="font-size:11px; text-transform:uppercase; color:#ff6b6b; letter-spacing:1px; margin-bottom:4px;" data-i18n="stats_least">${t('stats_least')}</div>
+      <div style="font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${least.name}</div>
+      <div style="font-size:18px; font-weight:700; color:var(--text); margin-top:4px;">${getAppreciationPct(least.id)}%</div>
+    </div>
+  `;
+
+  const container = document.getElementById('stats-bars-container');
+  container.innerHTML = '';
+  sorted.forEach(track => {
+    const pct = getAppreciationPct(track.id);
+    const row = document.createElement('div'); row.style.display = 'flex'; row.style.flexDirection = 'column'; row.style.gap = '6px';
+    row.innerHTML = `
+      <div style="display:flex; justify-content:space-between; font-size:13px; gap: 8px;">
+        <span style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:85%;">${track.name}</span>
+        <span style="color:var(--muted); font-weight:500; flex-shrink:0;">${pct}%</span>
+      </div>
+      <div style="height:8px; background:var(--surface2); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.03);">
+        <div style="height:100%; width:${pct}%; background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%); border-radius:999px; transition: width 0.6s ease;"></div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  applyLang(); document.getElementById('stats-modal').classList.add('open');
+}
+
+function closeStatsModal(event) { if (event) event.preventDefault(); document.getElementById('stats-modal').classList.remove('open'); }
+
+function showResults() {
+  clearSavedSession(); 
+  document.getElementById('duel-phase').style.display = 'none';
+  document.getElementById('results-phase').style.display = 'block';
+  document.getElementById('stats-link').style.display = 'inline-block';
+  
+  const artistNames = currentAlbum.artists?.map(a => a.name).join(', ') || '';
+  document.getElementById('results-album-name').textContent = currentAlbum.name + ' — ' + artistNames;
+
+  const sorted = [...tracks].sort((a,b) => ratings[b.id]-ratings[a.id]);
+  const list = document.getElementById('ranking-list');
+  list.innerHTML = '';
+
+  sorted.forEach((track, idx) => {
+    const rank = idx+1;
+    const cls = rank===1?'rank-num gold':rank===2?'rank-num silver':rank===3?'rank-num bronze':'rank-num';
+    const item = document.createElement('div');
+    item.className = 'rank-item'; item.style.animationDelay = (idx*.04)+'s';
+    item.innerHTML = `<div class="${cls}">${rank}</div><div class="rank-name">${track.name}</div><div class="rank-dur">${fmtDur(track.duration_ms)}</div>`;
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  initRanking();
+  document.getElementById('duel-phase').style.display = 'block';
+  document.getElementById('results-phase').style.display = 'none';
+  document.getElementById('stats-link').style.display = 'none';
+});
+document.getElementById('new-album-btn').addEventListener('click', () => {
+  document.getElementById('ranking-section').style.display = 'none';
+  document.getElementById('search-section').style.display = 'block';
+  document.getElementById('albums-results').innerHTML = '';
+  document.getElementById('search-status').innerHTML = '';
+  document.getElementById('artist-input').value = '';
+  document.getElementById('link-input').value = '';
+  document.getElementById('stats-link').style.display = 'none';
+});
+document.getElementById('back-btn').addEventListener('click', () => {
+  document.getElementById('ranking-section').style.display = 'none';
+  document.getElementById('search-section').style.display = 'block';
+  document.getElementById('stats-link').style.display = 'none';
+});
+</script>
+</body>
+</html>
