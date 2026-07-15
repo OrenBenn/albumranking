@@ -10,9 +10,9 @@ No setup or keys required\! Play it directly here:
 
 ## **🌍 Table of Contents / Table des matières / תוכן עניינים**
 
-* [🇫🇷 Français] (#francais) 
-* [🇬🇧 English] (#english)  
-* [🇮🇱 עברית] (#עברית)
+* [🇫🇷 Français](#francais) 
+* [🇬🇧 English](#english)  
+* [🇮🇱 עברית](#עברית)
 
 <span id="francais"></span>
 ## **Français**
