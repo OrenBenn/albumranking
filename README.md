@@ -10,10 +10,11 @@ No setup or keys required\! Play it directly here:
 
 ## **🌍 Table of Contents / Table des matières / תוכן עניינים**
 
-* [🇫🇷 Français](#bookmark=id.7fm6zpmdeve6)  
-* [🇬🇧 English](#bookmark=id.nf7uy9bmlyzu)  
-* [🇮🇱 עברית](#bookmark=id.o0ld1xjxnssr)
+* [🇫🇷 Français] (#francais) 
+* [🇬🇧 English] (#english)  
+* [🇮🇱 עברית] (#עברית)
 
+<span id="francais"></span>
 ## **Français**
 
 ### **📝 Le Concept**
@@ -45,6 +46,7 @@ Grâce à un système de classement **ELO** (le même algorithme utilisé pour c
 * **Algorithme ELO :** Les scores commencent tous à 1000 points. À chaque duel, le calcul de la probabilité de victoire ajuste les scores avec un facteur ![][image1].  
 * **Fuzzy Matching :** Pour associer les morceaux de Spotify avec les extraits d'Apple Music, un algorithme nettoie les chaînes de caractères (accents, ponctuations, mentions "Deluxe/Bonus") afin de garantir le meilleur taux de correspondance possible.
 
+<span id="english"></span>
 ## **English**
 
 ### **📝 The Concept**
@@ -76,6 +78,7 @@ Using the **ELO Rating System** (the very algorithm used to rank chess players),
 * **ELO Algorithm:** Song ratings start at 1000 points. Every matchup outcome calculates expected victory probabilities and updates ratings using a dynamic ![][image2]\-factor of 32\.  
 * **Fuzzy String Matching:** To map Spotify track lists to Apple Music audio previews, an intelligent cleaner strips special characters (accents, punctuation, "Deluxe/Bonus" suffixes) to guarantee maximum matching coverage.
 
+<span id="עברית"></span>
 ## **עברית**
 
 ### **📝 הקונספט**
